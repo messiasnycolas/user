@@ -18,7 +18,7 @@ type User struct {
 
 // UserHandler analyses the request and delegates to the proper function
 func UserHandler(w http.ResponseWriter, r *http.Request) {
-	sid := strings.TrimPrefix(r.URL.Path, "/user/")
+	sid := strings.TrimPrefix(r.URL.Path, "/user")
 	id, err := strconv.Atoi(sid)
 	if sid != "" && err != nil {
 		w.WriteHeader(http.StatusNotFound)
