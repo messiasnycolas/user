@@ -74,3 +74,20 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, string(jsonResponse))
 }
+
+func updateUser(w http.ResponseWriter, r *http.Request, id int) {
+	db := openDBConnection(w)
+	defer db.Close()
+
+	var newUser User
+	json.NewDecoder(r.Body).Decode(&newUser)
+
+	_, err := db.Exec("update users set name=? where id=?", newUser.Name, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error while updating user!")
+		return
+	}
+
+	fmt.Fprintf(w, "Successful operation.")
+}

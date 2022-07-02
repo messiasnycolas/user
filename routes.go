@@ -11,6 +11,7 @@ import (
 func UserRoutes(w http.ResponseWriter, r *http.Request) {
 	sid := strings.TrimPrefix(r.URL.Path, "/user/")
 	id, err := strconv.Atoi(sid)
+	fmt.Println(sid, id, r.Method, r.URL.Path)
 	if sid != "" && err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "I am not sure what you are looking for...")
@@ -18,6 +19,8 @@ func UserRoutes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch {
+	case r.Method == "PUT" && id > 0:
+		updateUser(w, r, id)
 	case r.Method == "GET" && id > 0:
 		getUserByID(w, r, id)
 	case r.Method == "GET":
