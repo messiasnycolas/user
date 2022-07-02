@@ -4,14 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var dbUsername = os.Getenv("DB_USERNAME")
-var dbPassword = os.Getenv("DB_PASSWORD")
-var dbName = os.Getenv("DB_NAME")
+var dbVars = loadEnv("DB_USERNAME", "DB_PASSWORD", "DB_NAME")
+var dbUsername, dbPassword, dbName = dbVars[0], dbVars[1], dbVars[2]
 var dbUrl string = fmt.Sprintf("%v:%v@/%v", dbUsername, dbPassword, dbName)
 
 func openDBConnection(w http.ResponseWriter) (db *sql.DB) {
