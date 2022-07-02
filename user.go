@@ -15,6 +15,9 @@ type User struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
+type IDResponse = struct {
+	ID int64 `json:"id"`
+}
 
 // UserHandler analyses the request and delegates to the proper function
 func UserHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,5 +84,18 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	var newUser User
 	json.NewDecoder(r.Body).Decode(&newUser)
-	fmt.Println(newUser)
+
+	res, err := db.Exec("insert into users(name) values(?)", newUser.Name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error while creating user!")
+		return
+	}
+
+	lastInsertId, _ := res.LastInsertId()
+	response := IDResponse{lastInsertId}
+	jsonResponse, _ := json.Marshal(response)
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, string(jsonResponse))
 }
