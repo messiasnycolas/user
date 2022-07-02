@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -17,29 +15,6 @@ type User struct {
 }
 type IDResponse = struct {
 	ID int64 `json:"id"`
-}
-
-// UserHandler analyses the request and delegates to the proper function
-func UserHandler(w http.ResponseWriter, r *http.Request) {
-	sid := strings.TrimPrefix(r.URL.Path, "/user")
-	id, err := strconv.Atoi(sid)
-	if sid != "" && err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "I am not sure what you are looking for...")
-		return
-	}
-
-	switch {
-	case r.Method == "POST":
-		createUser(w, r)
-	case r.Method == "GET" && id > 0:
-		getUserByID(w, r, id)
-	case r.Method == "GET":
-		getUsers(w, r)
-	default:
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "I am not sure what you are looking for...")
-	}
 }
 
 func getUserByID(w http.ResponseWriter, r *http.Request, id int) {
