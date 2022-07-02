@@ -27,6 +27,8 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch {
+	case r.Method == "POST":
+		createUser(w, r)
 	case r.Method == "GET" && id > 0:
 		getUserByID(w, r, id)
 	case r.Method == "GET":
@@ -71,4 +73,13 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	jsonUsers, _ := json.Marshal(users)
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, string(jsonUsers))
+}
+
+func createUser(w http.ResponseWriter, r *http.Request) {
+	db := openDBConnection(w)
+	defer db.Close()
+
+	var newUser User
+	json.NewDecoder(r.Body).Decode(&newUser)
+	fmt.Println(newUser)
 }
