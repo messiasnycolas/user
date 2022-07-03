@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
+	database "github.com/messiasnycolas/user/db"
 )
 
 // User is the main entity
@@ -18,7 +19,12 @@ type IDResponse = struct {
 }
 
 func getUserByID(w http.ResponseWriter, r *http.Request, id int) {
-	db := openDBConnection(w)
+	db, err := database.OpenDBConnection()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Oops! There is a problem with our database.")
+		return
+	}
 	defer db.Close()
 
 	var user User
@@ -36,7 +42,12 @@ func getUserByID(w http.ResponseWriter, r *http.Request, id int) {
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	db := openDBConnection(w)
+	db, err := database.OpenDBConnection()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Oops! There is a problem with our database.")
+		return
+	}
 	defer db.Close()
 
 	rows, _ := db.Query("select id, name from users")
@@ -54,7 +65,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
-	db := openDBConnection(w)
+	db, err := database.OpenDBConnection()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Oops! There is a problem with our database.")
+		return
+	}
 	defer db.Close()
 
 	var newUser User
@@ -81,13 +97,18 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateUser(w http.ResponseWriter, r *http.Request, id int) {
-	db := openDBConnection(w)
+	db, err := database.OpenDBConnection()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Oops! There is a problem with our database.")
+		return
+	}
 	defer db.Close()
 
 	var newUser User
 	json.NewDecoder(r.Body).Decode(&newUser)
 
-	_, err := db.Exec("update users set name=? where id=?", newUser.Name, id)
+	_, err = db.Exec("update users set name=? where id=?", newUser.Name, id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error while updating user!")
@@ -98,10 +119,15 @@ func updateUser(w http.ResponseWriter, r *http.Request, id int) {
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request, id int) {
-	db := openDBConnection(w)
+	db, err := database.OpenDBConnection()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Oops! There is a problem with our database.")
+		return
+	}
 	defer db.Close()
 
-	_, err := db.Exec("delete from users where id=?", id)
+	_, err = db.Exec("delete from users where id=?", id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error while deleting user!")

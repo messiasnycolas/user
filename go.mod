@@ -1,4 +1,4 @@
-module github.com/messiasnycolas/server-db
+module github.com/messiasnycolas/user
 
 go 1.18
 

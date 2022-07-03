@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -7,7 +7,8 @@ import (
 	godotenv "github.com/joho/godotenv"
 )
 
-func loadEnv(keys ...string) (values []string) {
+// LoadEnv extract keys from the .env file
+func LoadEnv(keys ...string) (values []string) {
 	err := godotenv.Load(".env")
 
 	if err != nil {
