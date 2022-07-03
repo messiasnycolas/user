@@ -6,131 +6,98 @@ import (
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
-	database "github.com/messiasnycolas/user/db"
+	"github.com/messiasnycolas/user/model"
 )
 
-// User is the main entity
-type User struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
 type IDResponse = struct {
 	ID int64 `json:"id"`
 }
 
-func getUserByID(w http.ResponseWriter, r *http.Request, id int) {
-	db, err := database.OpenDBConnection()
+func getUserByID(w http.ResponseWriter, r *http.Request, id int64) {
+	user, err := model.Get(id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Oops! There is a problem with our database.")
-		return
-	}
-	defer db.Close()
-
-	var user User
-	db.QueryRow("select id, name from users where id = ?", id).Scan(&user.ID, &user.Name)
-
-	if user.ID <= 0 {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "This guy does not exist!")
+		// log error
+		if err.Error() == "sql: no rows in result set" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Unexpected error.")
+		}
 		return
 	}
 
 	jsonUser, _ := json.Marshal(user)
 	w.Header().Set("Content-Type", "application/json")
+
 	fmt.Fprintf(w, string(jsonUser))
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	db, err := database.OpenDBConnection()
+	users, err := model.GetAll()
 	if err != nil {
+		// log error
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Oops! There is a problem with our database.")
+		fmt.Fprintf(w, "Unexpected error.")
 		return
-	}
-	defer db.Close()
-
-	rows, _ := db.Query("select id, name from users")
-
-	var users []User
-	for rows.Next() {
-		var user User
-		rows.Scan(&user.ID, &user.Name)
-		users = append(users, user)
 	}
 
 	jsonUsers, _ := json.Marshal(users)
 	w.Header().Set("Content-Type", "application/json")
+
 	fmt.Fprintf(w, string(jsonUsers))
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
-	db, err := database.OpenDBConnection()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Oops! There is a problem with our database.")
-		return
-	}
-	defer db.Close()
-
-	var newUser User
-	json.NewDecoder(r.Body).Decode(&newUser)
-	if newUser.Name == "" {
-		w.WriteHeader(http.StatusInternalServerError)
+	var user model.User
+	json.NewDecoder(r.Body).Decode(&user)
+	if user.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "User must have a name!")
 		return
 	}
 
-	res, err := db.Exec("insert into users(name) values(?)", newUser.Name)
-	if err != nil {
+	id, err := model.Insert(user)
+	if err != nil || id == 0 {
+		// log error
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error while creating user!")
+		fmt.Fprintf(w, "Unexpected error.")
 		return
 	}
 
-	lastInsertId, _ := res.LastInsertId()
-	response := IDResponse{lastInsertId}
+	response := IDResponse{id}
 	jsonResponse, _ := json.Marshal(response)
-
 	w.Header().Set("Content-Type", "application/json")
+
 	fmt.Fprintf(w, string(jsonResponse))
 }
 
-func updateUser(w http.ResponseWriter, r *http.Request, id int) {
-	db, err := database.OpenDBConnection()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Oops! There is a problem with our database.")
+func updateUser(w http.ResponseWriter, r *http.Request, id int64) {
+	var user model.User
+	json.NewDecoder(r.Body).Decode(&user)
+	if user.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "User must have a name!")
 		return
 	}
-	defer db.Close()
 
-	var newUser User
-	json.NewDecoder(r.Body).Decode(&newUser)
-
-	_, err = db.Exec("update users set name=? where id=?", newUser.Name, id)
-	if err != nil {
+	rowsAffected, err := model.Update(id, user)
+	if err != nil || rowsAffected != 1 {
+		// log error
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error while updating user!")
+		fmt.Fprintf(w, "Unexpected error.")
 		return
 	}
 
 	fmt.Fprintf(w, "Successful operation.")
 }
 
-func deleteUser(w http.ResponseWriter, r *http.Request, id int) {
-	db, err := database.OpenDBConnection()
-	if err != nil {
+func deleteUser(w http.ResponseWriter, r *http.Request, id int64) {
+	rowsAffected, err := model.Delete(id)
+	if err != nil || rowsAffected != 1 {
+		// log error
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Oops! There is a problem with our database.")
-		return
-	}
-	defer db.Close()
-
-	_, err = db.Exec("delete from users where id=?", id)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error while deleting user!")
+		fmt.Fprintf(w, "Unexpected error.")
 		return
 	}
 

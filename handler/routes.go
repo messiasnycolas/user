@@ -11,7 +11,8 @@ import (
 func UserRoutes(w http.ResponseWriter, r *http.Request) {
 	sid := strings.TrimPrefix(r.URL.Path, "/user")
 	sid = strings.ReplaceAll(sid, "/", "")
-	id, err := strconv.Atoi(sid)
+	id, err := strconv.ParseInt(sid, 10, 64)
+
 	if sid != "" && err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "I am not sure what you are looking for...")
