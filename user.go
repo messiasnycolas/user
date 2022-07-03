@@ -96,3 +96,17 @@ func updateUser(w http.ResponseWriter, r *http.Request, id int) {
 
 	fmt.Fprintf(w, "Successful operation.")
 }
+
+func deleteUser(w http.ResponseWriter, r *http.Request, id int) {
+	db := openDBConnection(w)
+	defer db.Close()
+
+	_, err := db.Exec("delete from users where id=?", id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error while deleting user!")
+		return
+	}
+
+	fmt.Fprintf(w, "Successful operation.")
+}

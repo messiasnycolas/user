@@ -19,6 +19,8 @@ func UserRoutes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch {
+	case r.Method == "DELETE" && id > 0:
+		deleteUser(w, r, id)
 	case r.Method == "PUT" && id > 0:
 		updateUser(w, r, id)
 	case r.Method == "GET" && id > 0:
