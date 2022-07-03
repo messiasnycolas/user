@@ -9,9 +9,9 @@ import (
 
 // UserRoutes analyses the request and delegates to the proper function
 func UserRoutes(w http.ResponseWriter, r *http.Request) {
-	sid := strings.TrimPrefix(r.URL.Path, "/user/")
+	sid := strings.TrimPrefix(r.URL.Path, "/user")
+	sid = strings.ReplaceAll(sid, "/", "")
 	id, err := strconv.Atoi(sid)
-	fmt.Println(sid, id, r.Method, r.URL.Path)
 	if sid != "" && err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "I am not sure what you are looking for...")
