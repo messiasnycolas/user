@@ -59,6 +59,11 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	var newUser User
 	json.NewDecoder(r.Body).Decode(&newUser)
+	if newUser.Name == "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "User must have a name!")
+		return
+	}
 
 	res, err := db.Exec("insert into users(name) values(?)", newUser.Name)
 	if err != nil {
